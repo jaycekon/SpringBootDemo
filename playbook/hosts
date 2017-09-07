@@ -1,0 +1,6 @@
+[prod]
+xxx ansible_ssh_user=**
+xxx ansible_ssh_user=**
+
+[test]
+**** ansible_ssh_user=** ansible_ssh_pass=***

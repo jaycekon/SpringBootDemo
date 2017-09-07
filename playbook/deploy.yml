@@ -1,0 +1,35 @@
+---
+
+- hosts: '{{deploy_hosts_group}}'
+  serial: 1
+  any_errors_fatal: true
+
+  tasks:
+
+  - name: rename last war from deploytemp
+    shell: rename {{finalName}}.war  {{finalName}}bak.war  {{tomcat_path}}/deploytemp/*
+
+  - name: copy war to deploytemp
+    copy: src={{ war_path }} dest={{tomcat_path}}/deploytemp/
+
+  - name: stop tomcat
+    shell: ps -ef | grep {{tomcat_path}} | grep -v grep | awk '{print $2}' | xargs kill
+    ignore_errors: True
+
+  - name: remove last war from  webapps
+    shell: rm -rf {{tomcat_path}}/webapps/{{finalName}}
+
+  - name: remove last war from  webapps
+    shell: rm -rf {{tomcat_path}}/webapps/{{finalName}}.war
+
+  - name: copy war from deploytemp to webapps
+    shell: unzip -oq {{tomcat_path}}/deploytemp/{{finalName}}.war -d {{tomcat_path}}/webapps/{{finalName}}
+
+  - name: start tomcat
+    shell: export LANG=en_US.UTF-8 && nohup {{tomcat_path}}/bin/startup.sh
+
+  - name: wait for tomcat to start
+    wait_for: port={{tomcat_port}} timeout=30
+
+  - name: pause 10s
+    pause: seconds=10
